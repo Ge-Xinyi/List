@@ -14,20 +14,22 @@ const memberAvatars = {
 };
 
 function initClient() {
-  gapi.load("client:auth2", () => {
-    gapi.client
-      .init({
-        apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        scope: SCOPES,
-        discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
-      })
-      .then(() => gapi.auth2.getAuthInstance().signIn())
-      .then(() => loadPlans())
-      .catch(err => {
-        console.error("❌ 初始化失败:", err);
-        alert("初始化失败，请检查控制台错误信息");
-      });
+  gapi.load('client', async () => {
+    await gapi.client.init({
+      apiKey: API_KEY,
+      discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
+    });
+
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (tokenResponse) => {
+        console.log("✅ 登录成功:", tokenResponse);
+        await loadPlans();
+      }
+    });
+
+    tokenClient.requestAccessToken();
   });
 }
 
@@ -165,3 +167,4 @@ function renderRank() {
     tbody.appendChild(row);
   });
 }
+
