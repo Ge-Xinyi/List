@@ -1,5 +1,5 @@
-const CLIENT_ID = '53198014929-0330rrnta9fbk27vcutlfk6odn6q3iau.apps.googleusercontent.com'; // 替换为你的完整 OAuth 客户端 ID
-const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY'; // 替换为你的 API 密钥
+const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY'; 
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
 const SHEET_NAME = 'Meal';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
