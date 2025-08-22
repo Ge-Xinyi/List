@@ -1,8 +1,6 @@
-// const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY'; 
+const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY';
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
 const SHEET_NAME = 'Meal';
-// const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 let plans = [];
 const members = ['A', 'B', 'C', 'D'];
@@ -13,27 +11,6 @@ const memberAvatars = {
   D: 'https://i.imgur.com/4.png'
 };
 
-/* 
-function initClient() {
-  gapi.load('client', async () => {
-    await gapi.client.init({
-      apiKey: API_KEY,
-      discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
-    });
-
-    const tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: async (tokenResponse) => {
-        console.log("✅ 登录成功:", tokenResponse);
-        await loadPlans();
-      }
-    });
-
-    tokenClient.requestAccessToken();
-  });
-} 
-*/
 gapi.load('client', async () => {
   await gapi.client.init({
     apiKey: API_KEY,
@@ -62,7 +39,7 @@ async function loadPlans() {
     renderPlans();
     renderRank();
   } catch (err) {
-    console.error("❌ 加载计划失败:", err);
+    console.error("❌ 加载计划失败:", err.result?.error || err);
     alert("加载计划失败，请检查控制台错误信息");
   }
 }
@@ -89,6 +66,7 @@ document.getElementById('plan-form').addEventListener('submit', async function(e
       spreadsheetId: SHEET_ID,
       range: `${SHEET_NAME}!A:F`,
       valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
       resource: {
         values: [[
           newPlan.date,
@@ -105,7 +83,7 @@ document.getElementById('plan-form').addEventListener('submit', async function(e
     this.reset();
     await loadPlans();
   } catch (err) {
-    console.error("❌ 提交失败:", err);
+    console.error("❌ 提交失败:", err.result?.error || err);
     alert("提交失败，请检查控制台错误信息");
   }
 });
@@ -176,5 +154,3 @@ function renderRank() {
     tbody.appendChild(row);
   });
 }
-
-
