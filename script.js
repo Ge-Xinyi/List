@@ -23,7 +23,7 @@ async function loadPlans() {
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A2:F`
+      range: `${SHEET_NAME}!A2:F1000`
     });
 
     const rows = res.result.values || [];
@@ -154,3 +154,4 @@ function renderRank() {
     tbody.appendChild(row);
   });
 }
+
