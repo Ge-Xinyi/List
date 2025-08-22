@@ -9,34 +9,34 @@
 </head>
 <body>
     
-  <h1>🍲 吃饭计划管理</h1>
-  <button onclick="initClient()">🔐 登录并加载数据</button>
+  <h1>Meal Plan -- Don't be a pigeon !</h1>
+  <button onclick="initClient()">🔐 Log in and load the data</button>
   <section id="form-section">
-    <h2>📅 新建计划</h2>
+    <h2>📅 CREATE NEW</h2>
     <form id="plan-form">
-      <label>日期：<input type="date" id="date" required></label><br>
-      <label>来源：<input type="text" id="restaurant" placeholder="例如：大众点评" required></label><br>
-      <label>成员：</label>
+      <label>DATE: <input type="date" id="date" required></label><br>
+      <label>SOURCE: <input type="text" id="restaurant" placeholder="例如：大众点评" required></label><br>
+      <label>MEMBERS: </label>
       <label><input type="checkbox" name="members" value="A"> A</label>
       <label><input type="checkbox" name="members" value="B"> B</label>
       <label><input type="checkbox" name="members" value="C"> C</label>
       <label><input type="checkbox" name="members" value="D"> D</label><br>
-      <label>备注：<input type="text" id="note" placeholder="可选"></label><br>
-      <button type="submit">➕ 添加计划</button>
+      <label>NOTE: <input type="text" id="note" placeholder="可选"></label><br>
+      <button type="submit">➕ ADD PLAN</button>
     </form>
   </section>
 
   <section id="list-section">
-    <h2>📋 计划列表</h2>
+    <h2>📋 PLAN LIST</h2>
     <table>
       <thead>
         <tr>
-          <th>日期</th>
-          <th>来源</th>
-          <th>成员</th>
-          <th>是否完成</th>
-          <th>备注</th>
-          <th>操作</th>
+          <th> Date </th>
+          <th> Source </th>
+          <th> Member </th>
+          <th> Completed </th>
+          <th> Note </th>
+          <th> Operation </th>
         </tr>
       </thead>
       <tbody id="plan-list"></tbody>
@@ -44,16 +44,16 @@
   </section>
 
   <section id="rank-section">
-    <h2>🐦 鸽子排行榜</h2>
+    <h2>🐦 PIGEON RANK</h2>
     <table>
       <thead>
-        <tr><th>成员</th><th>鸽子次数</th></tr>
+        <tr><th>Member</th><th>Time</th></tr>
       </thead>
       <tbody id="pigeon-rank"></tbody>
     </table>
   </section>
 
-  <footer>Made with ❤️ by Our Team</footer>
+  <footer>Made by 🐧</footer>
   <script src="script.js"></script>
 </body>
 </html>
