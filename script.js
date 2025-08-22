@@ -1,6 +1,5 @@
 const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY';
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
-const SHEET_NAME = 'Meal';
 
 let plans = [];
 const members = ['A', 'B', 'C', 'D'];
@@ -17,18 +16,18 @@ gapi.load('client', async () => {
     discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
   });
   await loadPlans();
+  await loadRank();
 });
 
+// -------------------- Plans --------------------
 async function loadPlans() {
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A1:F1000` // 指定足够大的行数
+      range: `Plans!A2:F1000` // 指向 Plans sheet
     });
 
-    // 去掉表头
-    const rows = res.result.values ? res.result.values.slice(1) : [];
-
+    const rows = res.result.values || [];
     plans = rows.map(row => ({
       date: row[0] || '',
       restaurant: row[1] || '',
@@ -66,7 +65,7 @@ document.getElementById('plan-form').addEventListener('submit', async function(e
   try {
     await gapi.client.sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A:F`,
+      range: `Plans!A:F`,
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       resource: {
@@ -90,6 +89,22 @@ document.getElementById('plan-form').addEventListener('submit', async function(e
   }
 });
 
+// -------------------- Pigeon Rank --------------------
+async function loadRank() {
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `PigeonRank!A2:B1000`
+    });
+
+    const rows = res.result.values || [];
+    renderRank();
+  } catch (err) {
+    console.error("❌ 加载排名失败:", err.result?.error || err);
+  }
+}
+
+// -------------------- 渲染函数 --------------------
 function renderMemberTags(names) {
   return names.map(name => `
     <span class="member-tag">
@@ -116,21 +131,77 @@ function renderPlans() {
   });
 }
 
-function toggleDone(index) {
+async function toggleDone(index) {
   plans[index].done = !plans[index].done;
+  await updatePlanRow(index);
   renderRank();
 }
 
 function updateNote(index, value) {
   plans[index].note = value;
+  updatePlanRow(index); // 同步到 sheet
 }
 
-function deletePlan(index) {
-  plans.splice(index, 1);
-  renderPlans();
-  renderRank();
+async function deletePlan(index) {
+  try {
+    // 删除对应行（Google Sheets API 没有直接删除单元格，只能使用 batchUpdate）
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SHEET_ID,
+      resource: {
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId: await getSheetId('Plans'),
+              dimension: 'ROWS',
+              startIndex: index + 1, // +1 因为 A2 对应 index 0
+              endIndex: index + 2
+            }
+          }
+        }]
+      }
+    });
+
+    plans.splice(index, 1);
+    renderPlans();
+    renderRank();
+  } catch (err) {
+    console.error("❌ 删除失败:", err.result?.error || err);
+  }
 }
 
+// -------------------- 更新单行 --------------------
+async function updatePlanRow(index) {
+  try {
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `Plans!A${index + 2}:F${index + 2}`, // A2 对应 index 0
+      valueInputOption: 'USER_ENTERED',
+      resource: {
+        values: [[
+          plans[index].date,
+          plans[index].restaurant,
+          plans[index].initiator,
+          plans[index].participants.join(','),
+          plans[index].done ? '是' : '否',
+          plans[index].note
+        ]]
+      }
+    });
+  } catch (err) {
+    console.error("❌ 更新行失败:", err.result?.error || err);
+  }
+}
+
+// -------------------- 获取 sheetId --------------------
+async function getSheetId(sheetName) {
+  const res = await gapi.client.sheets.spreadsheets.get({
+    spreadsheetId: SHEET_ID
+  });
+  const sheet = res.result.sheets.find(s => s.properties.title === sheetName);
+  return sheet ? sheet.properties.sheetId : null;
+}
+
+// -------------------- 渲染排名 --------------------
 function renderRank() {
   const rank = {};
   members.forEach(name => rank[name] = 0);
@@ -156,6 +227,3 @@ function renderRank() {
     tbody.appendChild(row);
   });
 }
-
-
-
