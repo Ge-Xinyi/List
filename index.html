@@ -5,16 +5,15 @@
   <title>Meal Plan</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script async defer src="https://apis.google.com/js/api.js"></script>
+  <script async defer src="https://apis.google.com/js/api.js" onload="handleGapiLoad()"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <div id="auth-section">
-    <button id="login-btn">Login Google</button>
+    <div id="login-btn"></div>
     <button id="logout-btn" style="display:none;">Logout</button>
   </div>
   <h1>Meal Plan -- Don't be a pigeon !</h1>
-  <!-- <button onclick="initClient()">🔐 Log in and load the data</button> -->
   <section id="form-section">
     <h2>📅 CREATE NEW</h2>
     <form id="plan-form">
@@ -61,12 +60,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
