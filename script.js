@@ -9,7 +9,7 @@ const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 let tokenClient;
 let plans = [];
 let pigeonCounts = { A: 0, B: 0, C: 0, D: 0 };
-const members = ['A', 'B', 'C', 'D'];
+const members = ['😈', '🐧', '🧊', '💭'];
 const memberAvatars = {
   A: 'https://i.imgur.com/1.png',
   B: 'https://i.imgur.com/2.png',
@@ -21,39 +21,47 @@ const memberAvatars = {
 const loginBtn = document.getElementById('login-btn');
 
 // --- INITIALIZATION ---
-window.onload = () => {
-  gapi.load('client', initializeGapiClient);
-  google.accounts.id.initialize({
-    client_id: CLIENT_ID,
-    callback: () => {}
-  });
-};
-
-async function initializeGapiClient() {
-  await gapi.client.init({
-    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-  });
-  initializeTokenClient();
+function handleClientLoad() {
+  gapi.load("client:auth2", initClient);
 }
 
-function initializeTokenClient() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: async (tokenResponse) => {
-      if (tokenResponse.error) {
-        console.error("Authentication error:", tokenResponse.error);
-        alert("Login failed. Please check the console for details.");
-        return;
-      }
-      console.log("✅ Login successful!");
-      await loadPlans();
-      await loadPigeonCounts();
-    },
-  });
+function initClient() {
+  gapi.client
+    .init({
+      apiKey: API_KEY,  // 你需要加上 API_KEY
+      clientId: CLIENT_ID,
+      discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+      scope: SCOPES,
+    })
+    .then(() => {
+      const auth = gapi.auth2.getAuthInstance();
+
+      // 登录状态监听
+      auth.isSignedIn.listen(updateSigninStatus);
+
+      // 初始化时检查登录
+      updateSigninStatus(auth.isSignedIn.get());
+
+      // 按钮绑定
+      document.getElementById("login-btn").onclick = () => auth.signIn();
+      document.getElementById("logout-btn").onclick = () => auth.signOut();
+    });
 }
 
-loginBtn.onclick = () => tokenClient.requestAccessToken();
+function updateSigninStatus(isSignedIn) {
+  if (isSignedIn) {
+    console.log("✅ 已登录");
+    document.getElementById("login-btn").style.display = "none";
+    document.getElementById("logout-btn").style.display = "block";
+
+    loadPlans();
+    loadPigeonCounts();
+  } else {
+    console.log("❌ 未登录");
+    document.getElementById("login-btn").style.display = "block";
+    document.getElementById("logout-btn").style.display = "none";
+  }
+}
 
 // --- FORM SUBMIT ---
 document.getElementById('plan-form').addEventListener('submit', async function(e) {
@@ -262,5 +270,6 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
 
 
