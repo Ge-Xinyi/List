@@ -1,5 +1,5 @@
 // --- CONFIGURATION ---
-const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY'; 
+// const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY'; // 删除这一行
 const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
 const SHEET_NAME = 'Plans'; 
@@ -34,7 +34,7 @@ function handleCredentialResponse(response) {
 function handleGapiLoad() {
   gapi.load('client', () => {
     gapi.client.init({
-      apiKey: API_KEY,
+      // apiKey: API_KEY, // 删除此参数
       discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
     });
   });
