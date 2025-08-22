@@ -142,3 +142,21 @@ button i {
     font-size: 13px;
   }
 }
+
+/* 放鸽子按钮样式 */
+.pigeon-btn {
+  padding: 4px 10px;
+  margin-left: 6px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pigeon-btn:hover {
+  background-color: #cc0000;
+}
+
+
