@@ -1,8 +1,8 @@
 // --- CONFIGURATION ---
 const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
-const SHEET_NAME = 'Meal'; 
-const PIGEON_SHEET = 'Pigeon'; // 新增专门存放放鸽子数据的Sheet
+const SHEET_NAME = 'Plans'; 
+const PIGEON_SHEET = 'PigeonRank'; // 新增专门存放放鸽子数据的Sheet
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 // --- GLOBAL VARIABLES ---
@@ -262,4 +262,5 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
 
