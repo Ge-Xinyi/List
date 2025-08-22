@@ -1,8 +1,8 @@
-const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
+// const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY'; 
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
 const SHEET_NAME = 'Meal';
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+// const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 let plans = [];
 const members = ['A', 'B', 'C', 'D'];
@@ -13,6 +13,7 @@ const memberAvatars = {
   D: 'https://i.imgur.com/4.png'
 };
 
+/* 
 function initClient() {
   gapi.load('client', async () => {
     await gapi.client.init({
@@ -31,7 +32,15 @@ function initClient() {
 
     tokenClient.requestAccessToken();
   });
-}
+} 
+*/
+gapi.load('client', async () => {
+  await gapi.client.init({
+    apiKey: API_KEY,
+    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
+  });
+  await loadPlans();
+});
 
 async function loadPlans() {
   try {
@@ -167,4 +176,5 @@ function renderRank() {
     tbody.appendChild(row);
   });
 }
+
 
