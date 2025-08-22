@@ -3,7 +3,7 @@ const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY';
 const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
 const SHEET_NAME = 'Plans'; 
-const PIGEON_SHEET = 'PigeonRank'; // 新增专门存放放鸽子数据的Sheet
+const PIGEON_SHEET = 'PigeonRank';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 // --- GLOBAL VARIABLES ---
@@ -20,49 +20,67 @@ const memberAvatars = {
 
 // --- DOM ELEMENTS ---
 const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
 
 // --- INITIALIZATION ---
-function handleClientLoad() {
-  gapi.load("client:auth2", initClient);
+function handleCredentialResponse(response) {
+  const accessToken = response.credential;
+  // Initialize the Sheets API client with the access token
+  gapi.client.setToken({ access_token: accessToken });
+  console.log("✅ Logged in successfully with GIS");
+  updateSigninStatus(true);
 }
 
-function initClient() {
-  gapi.client
-    .init({
-      apiKey: API_KEY,  // 你需要加上 API_KEY
-      clientId: CLIENT_ID,
-      discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-      scope: SCOPES,
-    })
-    .then(() => {
-      const auth = gapi.auth2.getAuthInstance();
-
-      // 登录状态监听
-      auth.isSignedIn.listen(updateSigninStatus);
-
-      // 初始化时检查登录
-      updateSigninStatus(auth.isSignedIn.get());
-
-      // 按钮绑定
-      document.getElementById("login-btn").onclick = () => auth.signIn();
-      document.getElementById("logout-btn").onclick = () => auth.signOut();
+function handleGapiLoad() {
+  gapi.load('client', () => {
+    gapi.client.init({
+      apiKey: API_KEY,
+      discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
     });
+    // The GIS library handles authentication and sets the token
+    // The old gapi.auth2 client is no longer needed for auth.
+  });
 }
 
 function updateSigninStatus(isSignedIn) {
   if (isSignedIn) {
-    console.log("✅ 已登录");
-    document.getElementById("login-btn").style.display = "none";
-    document.getElementById("logout-btn").style.display = "block";
-
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'block';
     loadPlans();
     loadPigeonCounts();
   } else {
-    console.log("❌ 未登录");
-    document.getElementById("login-btn").style.display = "block";
-    document.getElementById("logout-btn").style.display = "none";
+    loginBtn.style.display = 'block';
+    logoutBtn.style.display = 'none';
   }
 }
+
+// --- GIS SETUP ---
+window.onload = function () {
+  const client = google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback: handleCredentialResponse,
+    scope: SCOPES,
+  });
+
+  // Use a login button
+  google.accounts.id.renderButton(
+    document.getElementById("login-btn"),
+    { theme: "outline", size: "large" }  // Customize the button
+  );
+
+  // Set up sign-out
+  logoutBtn.onclick = () => {
+    google.accounts.id.disableAutoSelect(); // You may want this if you're using it
+    gapi.client.setToken(null);
+    updateSigninStatus(false);
+    console.log("✅ Signed out");
+  };
+
+  handleGapiLoad();
+};
+
+// --- REST OF YOUR CODE (UNCHANGED) ---
+// The rest of your functions (form submit, loadPlans, loadPigeonCounts, render, update, delete) remain the same because they use the Sheets API client, which is now correctly initialized by the GIS token.
 
 // --- FORM SUBMIT ---
 document.getElementById('plan-form').addEventListener('submit', async function(e) {
@@ -271,12 +289,3 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
-window.addEventListener("load", () => {
-  gapi.load("client:auth2", initClient);
-});
-
-
-
-
-
-
