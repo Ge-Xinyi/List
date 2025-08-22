@@ -21,16 +21,19 @@ gapi.load('client', async () => {
 
 async function loadPlans() {
   try {
+    // 获取整个表格 A 到 F 列
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A2:F1000`
+      range: `${SHEET_NAME}!A:F`
     });
 
-    const rows = res.result.values || [];
+    // 获取数据，跳过表头（假设第一行是表头）
+    const rows = res.result.values ? res.result.values.slice(1) : [];
+
     plans = rows.map(row => ({
-      date: row[0],
-      restaurant: row[1],
-      initiator: row[2],
+      date: row[0] || '',
+      restaurant: row[1] || '',
+      initiator: row[2] || '',
       participants: row[3] ? row[3].split(',') : [],
       done: row[4] === '是',
       note: row[5] || ''
@@ -154,4 +157,5 @@ function renderRank() {
     tbody.appendChild(row);
   });
 }
+
 
