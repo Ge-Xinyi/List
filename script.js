@@ -271,6 +271,10 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+window.addEventListener("load", () => {
+  gapi.load("client:auth2", initClient);
+});
+
 
 
 
