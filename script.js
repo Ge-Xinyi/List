@@ -1,147 +1,129 @@
 // --- CONFIGURATION ---
-// const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY'; // 删除这一行
 const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
-const SHEET_NAME = 'Plans'; 
+const SHEET_NAME = 'Plans';
 const PIGEON_SHEET = 'PigeonRank';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
-// --- GLOBAL VARIABLES ---
 let plans = [];
 let pigeonCounts = { '😈': 0, '🐧': 0, '🧊': 0, '💭': 0 };
-const members = ['😈', '🐧', '🧊', '💭'];
-const memberAvatars = {
-  '😈': 'https://i.imgur.com/1.png',
-  '🐧': 'https://i.imgur.com/2.png',
-  '🧊': 'https://i.imgur.com/3.png',
-  '💭': 'https://i.imgur.com/4.png'
-};
 
 // --- DOM ELEMENTS ---
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const planForm = document.getElementById('plan-form');
+const planListTbody = document.getElementById('plan-list');
+const pigeonTbody = document.getElementById('pigeon-rank');
 
-// --- INITIALIZATION & AUTHENTICATION ---
-function handleCredentialResponse(response) {
-  const accessToken = response.credential;
-  // Use the access token to authenticate gapi.client
-  gapi.client.setToken({ access_token: accessToken });
-  console.log("✅ Logged in successfully with GIS");
-  updateSigninStatus(true);
-}
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
 
-function handleGapiLoad() {
-  gapi.load('client', () => {
-    gapi.client.init({
-      // apiKey: API_KEY, // 删除此参数
-      discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-    });
-  });
-}
-
-function updateSigninStatus(isSignedIn) {
-  if (isSignedIn) {
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'block';
-    // Load data only after a successful sign-in
-    loadPlans();
-    loadPigeonCounts();
-  } else {
-    loginBtn.style.display = 'block';
-    logoutBtn.style.display = 'none';
-    document.getElementById('plan-list').innerHTML = '';
-    document.getElementById('pigeon-rank').innerHTML = '';
-  }
-}
-
-window.onload = function () {
-  // Initialize Google Identity Services (GIS)
-  google.accounts.id.initialize({
-    client_id: CLIENT_ID,
-    callback: handleCredentialResponse,
-    scope: SCOPES,
-  });
-
-  // Render the Google Sign-In button
-  google.accounts.id.renderButton(
-    loginBtn,
-    { theme: "outline", size: "large" }
-  );
-
-  // Set up sign-out button functionality
-  logoutBtn.onclick = () => {
-    google.accounts.id.disableAutoSelect();
-    gapi.client.setToken(null);
-    updateSigninStatus(false);
-    console.log("✅ Signed out");
-  };
-
-  // Load the GAPI client library
-  handleGapiLoad();
-
-  // Attach form submit listener
+// --- INITIALIZATION ---
+window.onload = () => {
+  gapi.load('client', initializeGapi);
+  initializeGis();
   planForm.addEventListener('submit', handleFormSubmit);
 };
 
-// --- DATA HANDLERS ---
+// --- GAPI 初始化 ---
+function initializeGapi() {
+  gapi.client.init({
+    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+  }).then(() => {
+    gapiInited = true;
+    maybeEnableButtons();
+  });
+}
+
+// --- GIS 初始化 ---
+function initializeGis() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.error) {
+        console.error(resp);
+        return;
+      }
+      updateSigninStatus(true);
+    }
+  });
+  gisInited = true;
+  maybeEnableButtons();
+}
+
+function maybeEnableButtons() {
+  if (gapiInited && gisInited) {
+    loginBtn.style.display = 'block';
+    loginBtn.onclick = () => {
+      tokenClient.requestAccessToken({prompt: 'consent'});
+    };
+  }
+}
+
+// --- SIGN IN / SIGN OUT ---
+function updateSigninStatus(signedIn) {
+  loginBtn.style.display = signedIn ? 'none' : 'block';
+  logoutBtn.style.display = signedIn ? 'block' : 'none';
+  if (signedIn) {
+    loadPlans();
+    loadPigeonCounts();
+  } else {
+    planListTbody.innerHTML = '';
+    pigeonTbody.innerHTML = '';
+  }
+}
+
+logoutBtn.onclick = () => {
+  gapi.client.setToken(null);
+  updateSigninStatus(false);
+};
+
+// --- FORM SUBMIT ---
 async function handleFormSubmit(e) {
   e.preventDefault();
+  const date = document.getElementById('date').value;
+  const restaurant = document.getElementById('restaurant').value;
+  const note = document.getElementById('note').value;
+  const participants = Array.from(document.querySelectorAll('input[name="members"]:checked')).map(cb=>cb.value);
+  const initiator = participants[0]||'';
 
-  const newPlanData = {
-    date: document.getElementById('date').value,
-    restaurant: document.getElementById('restaurant').value,
-    note: document.getElementById('note').value,
-    participants: Array.from(document.querySelectorAll('input[name="members"]:checked')).map(el => el.value),
-    initiator: (Array.from(document.querySelectorAll('input[name="members"]:checked')).map(el => el.value))[0] || '',
-    done: false
-  };
+  const newPlan = [date, restaurant, initiator, participants.join(','), '否', note];
 
   try {
     await gapi.client.sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: `${SHEET_NAME}!A:F`,
       valueInputOption: 'USER_ENTERED',
-      resource: {
-        values: [[
-          newPlanData.date,
-          newPlanData.restaurant,
-          newPlanData.initiator,
-          newPlanData.participants.join(','),
-          newPlanData.done ? '是' : '否',
-          newPlanData.note
-        ]]
-      }
+      resource: { values: [newPlan] }
     });
-    alert('✅ Plan added successfully!');
-    this.reset();
+    planForm.reset();
+    document.querySelectorAll('input[name="members"]').forEach(cb=>cb.checked=false);
+    alert('✅ Plan added!');
     await loadPlans();
-  } catch (err) {
-    console.error("❌ Failed to add plan:", err);
-    alert("Failed to add plan. Please check the console for details.");
-  }
+  } catch(err){ console.error(err); alert('Failed to add plan'); }
 }
 
+// --- LOAD DATA ---
 async function loadPlans() {
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
       range: `${SHEET_NAME}!A2:F`
     });
-    const rows = res.result.values || [];
-    plans = rows.map((row, index) => ({
-      rowIndex: index + 2,
-      date: row[0] || '',
-      restaurant: row[1] || '',
-      initiator: row[2] || '',
-      participants: row[3] ? row[3].split(',') : [],
-      done: row[4] === '是',
-      note: row[5] || ''
+    const rows = res.result.values||[];
+    plans = rows.map((r,i)=>({
+      rowIndex:i+2,
+      date:r[0]||'',
+      restaurant:r[1]||'',
+      initiator:r[2]||'',
+      participants:r[3]?r[3].split(','):[],
+      done:r[4]==='是',
+      note:r[5]||''
     }));
     renderPlans();
-  } catch (err) {
-    console.error("❌ Failed to load plans:", err);
-  }
+  } catch(err){ console.error(err); }
 }
 
 async function loadPigeonCounts() {
@@ -150,39 +132,14 @@ async function loadPigeonCounts() {
       spreadsheetId: SHEET_ID,
       range: `${PIGEON_SHEET}!A2:B`
     });
-    const rows = res.result.values || [];
+    const rows = res.result.values||[];
     pigeonCounts = {};
-    rows.forEach(row => {
-      const name = row[0];
-      const count = parseInt(row[1] || "0", 10);
-      pigeonCounts[name] = count;
-    });
+    rows.forEach(r=>pigeonCounts[r[0]] = parseInt(r[1]||0,10));
     renderRank();
-  } catch (err) {
-    console.error("❌ Failed to load pigeon counts:", err);
-    alert("加载放鸽子次数失败，请检查控制台");
-  }
+  } catch(err){ console.error(err); }
 }
 
-async function incrementPigeon(name) {
-  pigeonCounts[name] += 1;
-  renderRank();
-  try {
-    const membersList = Object.keys(pigeonCounts);
-    const rowIndex = membersList.indexOf(name) + 2;
-    await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `${PIGEON_SHEET}!B${rowIndex}`,
-      valueInputOption: 'USER_ENTERED',
-      resource: { values: [[pigeonCounts[name]]] }
-    });
-    console.log(`✅ Updated ${name} to ${pigeonCounts[name]}`);
-  } catch (err) {
-    console.error("❌ Failed to update pigeon count:", err);
-    alert("更新放鸽子次数失败，请重试");
-  }
-}
-
+// --- PLAN OPERATIONS ---
 async function toggleDone(index) {
   plans[index].done = !plans[index].done;
   await updatePlanRow(index);
@@ -194,96 +151,79 @@ async function updateNote(index, value) {
 }
 
 async function updatePlanRow(index) {
-  const plan = plans[index];
+  const p = plans[index];
   try {
     await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A${plan.rowIndex}:F${plan.rowIndex}`,
-      valueInputOption: 'USER_ENTERED',
-      resource: {
-        values: [[
-          plan.date,
-          plan.restaurant,
-          plan.initiator,
-          plan.participants.join(','),
-          plan.done ? '是' : '否',
-          plan.note
-        ]]
-      }
+      spreadsheetId:SHEET_ID,
+      range:`${SHEET_NAME}!A${p.rowIndex}:F${p.rowIndex}`,
+      valueInputOption:'USER_ENTERED',
+      resource:{ values:[[p.date,p.restaurant,p.initiator,p.participants.join(','),p.done?'是':'否',p.note]] }
     });
-  } catch (err) {
-    console.error("❌ Failed to update row:", err);
-  }
+  } catch(err){ console.error(err); }
 }
 
-async function deletePlan(index) {
-  if (!confirm("Are you sure you want to delete this plan?")) return;
-  const plan = plans[index];
+async function deletePlan(index){
+  if(!confirm('Are you sure to delete?')) return;
+  const p = plans[index];
   try {
-    const res = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-    const sheet = res.result.sheets.find(s => s.properties.title === SHEET_NAME);
-    const sheetId = sheet.properties.sheetId;
+    const sheetInfo = await gapi.client.sheets.spreadsheets.get({ spreadsheetId:SHEET_ID });
+    const sheetId = sheetInfo.result.sheets.find(s=>s.properties.title===SHEET_NAME).properties.sheetId;
     await gapi.client.sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      resource: {
-        requests: [{
-          deleteDimension: {
-            range: {
-              sheetId: sheetId,
-              dimension: 'ROWS',
-              startIndex: plan.rowIndex - 1,
-              endIndex: plan.rowIndex
-            }
-          }
-        }]
-      }
+      spreadsheetId:SHEET_ID,
+      resource:{ requests:[{ deleteDimension:{ range:{ sheetId, dimension:'ROWS', startIndex:p.rowIndex-1, endIndex:p.rowIndex } } }] }
     });
     await loadPlans();
-  } catch (err) {
-    console.error("❌ Failed to delete plan:", err);
-  }
+  } catch(err){ console.error(err); }
 }
 
-// --- RENDER FUNCTIONS ---
+// --- PIGEON ---
+async function incrementPigeon(name){
+  pigeonCounts[name] = (pigeonCounts[name]||0)+1;
+  renderRank();
+  try {
+    const rowIndex = Object.keys(pigeonCounts).indexOf(name)+2;
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId:SHEET_ID,
+      range:`${PIGEON_SHEET}!B${rowIndex}`,
+      valueInputOption:'USER_ENTERED',
+      resource:{ values:[[pigeonCounts[name]]] }
+    });
+  } catch(err){ console.error(err); }
+}
+
+// --- RENDER ---
 function renderPlans() {
-  const tbody = document.getElementById('plan-list');
-  tbody.innerHTML = '';
-  plans.forEach((plan, index) => {
-    const row = document.createElement('tr');
-    row.classList.add('fade-in');
-    row.innerHTML = `
-      <td>${plan.date}</td>
-      <td>${plan.restaurant}</td>
-      <td>${renderMemberTags(plan.participants)}</td>
-      <td><input type="checkbox" ${plan.done ? 'checked' : ''} onchange="toggleDone(${index})"></td>
-      <td><input type="text" value="${plan.note}" onchange="updateNote(${index}, this.value)"></td>
-      <td><button onclick="deletePlan(${index})"><i class="fas fa-trash-alt"></i> Delete</button></td>
-    `;
-    tbody.appendChild(row);
+  planListTbody.innerHTML='';
+  plans.forEach((p,i)=>{
+    const tr=document.createElement('tr');
+
+    const tdDate=document.createElement('td'); tdDate.textContent=p.date;
+    const tdRest=document.createElement('td'); tdRest.textContent=p.restaurant;
+    const tdMem=document.createElement('td'); tdMem.innerHTML=p.participants.map(n=>`<span>${n}</span>`).join('');
+    const tdDone=document.createElement('td');
+    const chk=document.createElement('input'); chk.type='checkbox'; chk.checked=p.done; chk.addEventListener('change',()=>toggleDone(i));
+    tdDone.appendChild(chk);
+    const tdNote=document.createElement('td'); 
+    const noteInput=document.createElement('input'); noteInput.type='text'; noteInput.value=p.note; noteInput.addEventListener('change',()=>updateNote(i,noteInput.value));
+    tdNote.appendChild(noteInput);
+    const tdOp=document.createElement('td'); 
+    const delBtn=document.createElement('button'); delBtn.innerHTML='<i class="fas fa-trash-alt"></i> Delete'; delBtn.addEventListener('click',()=>deletePlan(i));
+    tdOp.appendChild(delBtn);
+
+    tr.append(tdDate,tdRest,tdMem,tdDone,tdNote,tdOp);
+    planListTbody.appendChild(tr);
   });
 }
 
 function renderRank() {
-  const sorted = Object.entries(pigeonCounts).sort((a, b) => b[1] - a[1]);
-  const tbody = document.getElementById('pigeon-rank');
-  tbody.innerHTML = '';
-  sorted.forEach(([name, count]) => {
-    const row = document.createElement('tr');
-    row.classList.add('fade-in');
-    row.innerHTML = `
-      <td>${renderMemberTags([name])}</td>
-      <td>${count}</td>
-      <td><button class="pigeon-btn" onclick="incrementPigeon('${name}')">放鸽子 +1</button></td>
-    `;
-    tbody.appendChild(row);
+  pigeonTbody.innerHTML='';
+  Object.entries(pigeonCounts).sort((a,b)=>b[1]-a[1]).forEach(([name,count])=>{
+    const tr=document.createElement('tr');
+    const tdName=document.createElement('td'); tdName.textContent=name;
+    const tdCount=document.createElement('td'); tdCount.textContent=count;
+    const tdBtn=document.createElement('td'); const btn=document.createElement('button'); btn.textContent='放鸽子 +1'; btn.addEventListener('click',()=>incrementPigeon(name));
+    tdBtn.appendChild(btn);
+    tr.append(tdName,tdCount,tdBtn);
+    pigeonTbody.appendChild(tr);
   });
-}
-
-// --- HELPERS ---
-function renderMemberTags(names) {
-  return names.map(name => `
-    <span class="member-tag">
-      <img src="${memberAvatars[name]}" alt="${name}">${name}
-    </span>
-  `).join('');
 }
