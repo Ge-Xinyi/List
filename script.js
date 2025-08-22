@@ -20,11 +20,12 @@ const memberAvatars = {
 // --- DOM ELEMENTS ---
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
+const planForm = document.getElementById('plan-form');
 
-// --- INITIALIZATION ---
+// --- INITIALIZATION & AUTHENTICATION ---
 function handleCredentialResponse(response) {
   const accessToken = response.credential;
-  // Initialize the Sheets API client with the access token
+  // Use the access token to authenticate gapi.client
   gapi.client.setToken({ access_token: accessToken });
   console.log("✅ Logged in successfully with GIS");
   updateSigninStatus(true);
@@ -43,27 +44,32 @@ function updateSigninStatus(isSignedIn) {
   if (isSignedIn) {
     loginBtn.style.display = 'none';
     logoutBtn.style.display = 'block';
+    // Load data only after a successful sign-in
     loadPlans();
     loadPigeonCounts();
   } else {
     loginBtn.style.display = 'block';
     logoutBtn.style.display = 'none';
+    document.getElementById('plan-list').innerHTML = '';
+    document.getElementById('pigeon-rank').innerHTML = '';
   }
 }
 
-// --- GIS SETUP ---
 window.onload = function () {
-  const client = google.accounts.id.initialize({
+  // Initialize Google Identity Services (GIS)
+  google.accounts.id.initialize({
     client_id: CLIENT_ID,
     callback: handleCredentialResponse,
     scope: SCOPES,
   });
 
+  // Render the Google Sign-In button
   google.accounts.id.renderButton(
-    document.getElementById("login-btn"),
+    loginBtn,
     { theme: "outline", size: "large" }
   );
 
+  // Set up sign-out button functionality
   logoutBtn.onclick = () => {
     google.accounts.id.disableAutoSelect();
     gapi.client.setToken(null);
@@ -71,11 +77,15 @@ window.onload = function () {
     console.log("✅ Signed out");
   };
 
+  // Load the GAPI client library
   handleGapiLoad();
+
+  // Attach form submit listener
+  planForm.addEventListener('submit', handleFormSubmit);
 };
 
-// --- FORM SUBMIT ---
-document.getElementById('plan-form').addEventListener('submit', async function(e) {
+// --- DATA HANDLERS ---
+async function handleFormSubmit(e) {
   e.preventDefault();
 
   const newPlanData = {
@@ -110,9 +120,8 @@ document.getElementById('plan-form').addEventListener('submit', async function(e
     console.error("❌ Failed to add plan:", err);
     alert("Failed to add plan. Please check the console for details.");
   }
-});
+}
 
-// --- LOAD PLANS ---
 async function loadPlans() {
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
@@ -135,7 +144,6 @@ async function loadPlans() {
   }
 }
 
-// --- LOAD PIGEON COUNTS ---
 async function loadPigeonCounts() {
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
@@ -156,42 +164,6 @@ async function loadPigeonCounts() {
   }
 }
 
-// --- RENDER FUNCTIONS ---
-function renderPlans() {
-  const tbody = document.getElementById('plan-list');
-  tbody.innerHTML = '';
-  plans.forEach((plan, index) => {
-    const row = document.createElement('tr');
-    row.classList.add('fade-in');
-    row.innerHTML = `
-      <td>${plan.date}</td>
-      <td>${plan.restaurant}</td>
-      <td>${renderMemberTags(plan.participants)}</td>
-      <td><input type="checkbox" ${plan.done ? 'checked' : ''} onchange="toggleDone(${index})"></td>
-      <td><input type="text" value="${plan.note}" onchange="updateNote(${index}, this.value)"></td>
-      <td><button onclick="deletePlan(${index})"><i class="fas fa-trash-alt"></i> Delete</button></td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-function renderRank() {
-  const sorted = Object.entries(pigeonCounts).sort((a, b) => b[1] - a[1]);
-  const tbody = document.getElementById('pigeon-rank');
-  tbody.innerHTML = '';
-  sorted.forEach(([name, count]) => {
-    const row = document.createElement('tr');
-    row.classList.add('fade-in');
-    row.innerHTML = `
-      <td>${renderMemberTags([name])}</td>
-      <td>${count}</td>
-      <td><button class="pigeon-btn" onclick="incrementPigeon('${name}')">放鸽子 +1</button></td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-// --- PIGEON UPDATE ---
 async function incrementPigeon(name) {
   pigeonCounts[name] += 1;
   renderRank();
@@ -209,15 +181,6 @@ async function incrementPigeon(name) {
     console.error("❌ Failed to update pigeon count:", err);
     alert("更新放鸽子次数失败，请重试");
   }
-}
-
-// --- HELPERS ---
-function renderMemberTags(names) {
-  return names.map(name => `
-    <span class="member-tag">
-      <img src="${memberAvatars[name]}" alt="${name}">${name}
-    </span>
-  `).join('');
 }
 
 async function toggleDone(index) {
@@ -279,4 +242,48 @@ async function deletePlan(index) {
   } catch (err) {
     console.error("❌ Failed to delete plan:", err);
   }
+}
+
+// --- RENDER FUNCTIONS ---
+function renderPlans() {
+  const tbody = document.getElementById('plan-list');
+  tbody.innerHTML = '';
+  plans.forEach((plan, index) => {
+    const row = document.createElement('tr');
+    row.classList.add('fade-in');
+    row.innerHTML = `
+      <td>${plan.date}</td>
+      <td>${plan.restaurant}</td>
+      <td>${renderMemberTags(plan.participants)}</td>
+      <td><input type="checkbox" ${plan.done ? 'checked' : ''} onchange="toggleDone(${index})"></td>
+      <td><input type="text" value="${plan.note}" onchange="updateNote(${index}, this.value)"></td>
+      <td><button onclick="deletePlan(${index})"><i class="fas fa-trash-alt"></i> Delete</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function renderRank() {
+  const sorted = Object.entries(pigeonCounts).sort((a, b) => b[1] - a[1]);
+  const tbody = document.getElementById('pigeon-rank');
+  tbody.innerHTML = '';
+  sorted.forEach(([name, count]) => {
+    const row = document.createElement('tr');
+    row.classList.add('fade-in');
+    row.innerHTML = `
+      <td>${renderMemberTags([name])}</td>
+      <td>${count}</td>
+      <td><button class="pigeon-btn" onclick="incrementPigeon('${name}')">放鸽子 +1</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// --- HELPERS ---
+function renderMemberTags(names) {
+  return names.map(name => `
+    <span class="member-tag">
+      <img src="${memberAvatars[name]}" alt="${name}">${name}
+    </span>
+  `).join('');
 }
