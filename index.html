@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Meal Plan</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+    
+  <h1>🍲 吃饭计划管理</h1>
+  <button onclick="initClient()">🔐 登录并加载数据</button>
+  <section id="form-section">
+    <h2>📅 新建计划</h2>
+    <form id="plan-form">
+      <label>日期：<input type="date" id="date" required></label><br>
+      <label>来源：<input type="text" id="restaurant" placeholder="例如：大众点评" required></label><br>
+      <label>成员：</label>
+      <label><input type="checkbox" name="members" value="A"> A</label>
+      <label><input type="checkbox" name="members" value="B"> B</label>
+      <label><input type="checkbox" name="members" value="C"> C</label>
+      <label><input type="checkbox" name="members" value="D"> D</label><br>
+      <label>备注：<input type="text" id="note" placeholder="可选"></label><br>
+      <button type="submit">➕ 添加计划</button>
+    </form>
+  </section>
+
+  <section id="list-section">
+    <h2>📋 计划列表</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>来源</th>
+          <th>成员</th>
+          <th>是否完成</th>
+          <th>备注</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="plan-list"></tbody>
+    </table>
+  </section>
+
+  <section id="rank-section">
+    <h2>🐦 鸽子排行榜</h2>
+    <table>
+      <thead>
+        <tr><th>成员</th><th>鸽子次数</th></tr>
+      </thead>
+      <tbody id="pigeon-rank"></tbody>
+    </table>
+  </section>
+
+  <footer>Made with ❤️ by Our Team</footer>
+  <script src="script.js"></script>
+</body>
+</html>
