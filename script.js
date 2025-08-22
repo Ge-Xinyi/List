@@ -58,6 +58,7 @@ loginBtn.onclick = () => tokenClient.requestAccessToken();
 // --- FORM SUBMIT ---
 document.getElementById('plan-form').addEventListener('submit', async function(e) {
   e.preventDefault();
+
   const newPlanData = {
     date: document.getElementById('date').value,
     restaurant: document.getElementById('restaurant').value,
@@ -73,16 +74,14 @@ document.getElementById('plan-form').addEventListener('submit', async function(e
       range: `${SHEET_NAME}!A:F`,
       valueInputOption: 'USER_ENTERED',
       resource: {
-        values: [
-          [
-            newPlanData.date,
-            newPlanData.restaurant,
-            newPlanData.initiator,
-            newPlanData.participants.join(','),
-            newPlanData.done ? '是' : '否',
-            newPlanData.note
-          ]
-        ]
+        values: [[
+          newPlanData.date,
+          newPlanData.restaurant,
+          newPlanData.initiator,
+          newPlanData.participants.join(','),
+          newPlanData.done ? '是' : '否',
+          newPlanData.note
+        ]]
       }
     });
     alert('✅ Plan added successfully!');
@@ -263,3 +262,4 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
