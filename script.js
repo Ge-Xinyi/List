@@ -7,7 +7,6 @@ const PIGEON_SHEET = 'PigeonRank';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 // --- GLOBAL VARIABLES ---
-let tokenClient;
 let plans = [];
 let pigeonCounts = { '😈': 0, '🐧': 0, '🧊': 0, '💭': 0 };
 const members = ['😈', '🐧', '🧊', '💭'];
@@ -37,8 +36,6 @@ function handleGapiLoad() {
       apiKey: API_KEY,
       discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
     });
-    // The GIS library handles authentication and sets the token
-    // The old gapi.auth2 client is no longer needed for auth.
   });
 }
 
@@ -62,15 +59,13 @@ window.onload = function () {
     scope: SCOPES,
   });
 
-  // Use a login button
   google.accounts.id.renderButton(
     document.getElementById("login-btn"),
-    { theme: "outline", size: "large" }  // Customize the button
+    { theme: "outline", size: "large" }
   );
 
-  // Set up sign-out
   logoutBtn.onclick = () => {
-    google.accounts.id.disableAutoSelect(); // You may want this if you're using it
+    google.accounts.id.disableAutoSelect();
     gapi.client.setToken(null);
     updateSigninStatus(false);
     console.log("✅ Signed out");
@@ -78,9 +73,6 @@ window.onload = function () {
 
   handleGapiLoad();
 };
-
-// --- REST OF YOUR CODE (UNCHANGED) ---
-// The rest of your functions (form submit, loadPlans, loadPigeonCounts, render, update, delete) remain the same because they use the Sheets API client, which is now correctly initialized by the GIS token.
 
 // --- FORM SUBMIT ---
 document.getElementById('plan-form').addEventListener('submit', async function(e) {
@@ -183,7 +175,6 @@ function renderPlans() {
   });
 }
 
-// 排行榜
 function renderRank() {
   const sorted = Object.entries(pigeonCounts).sort((a, b) => b[1] - a[1]);
   const tbody = document.getElementById('pigeon-rank');
