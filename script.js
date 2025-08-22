@@ -21,13 +21,12 @@ gapi.load('client', async () => {
 
 async function loadPlans() {
   try {
-    // 获取整个表格 A 到 F 列
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A:F`
+      range: `${SHEET_NAME}!A1:F1000` // 指定足够大的行数
     });
 
-    // 获取数据，跳过表头（假设第一行是表头）
+    // 去掉表头
     const rows = res.result.values ? res.result.values.slice(1) : [];
 
     plans = rows.map(row => ({
@@ -157,5 +156,6 @@ function renderRank() {
     tbody.appendChild(row);
   });
 }
+
 
 
