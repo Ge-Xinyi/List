@@ -17,22 +17,27 @@ gapi.load('client:auth2', async () => {
     discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
     scope: "https://www.googleapis.com/auth/spreadsheets"
   });
+});
 
+// -------------------- 确保已登录并设置 token --------------------
+async function ensureSignedIn() {
   const GoogleAuth = gapi.auth2.getAuthInstance();
   if (!GoogleAuth.isSignedIn.get()) {
-    await GoogleAuth.signIn(); // 弹出登录窗口
+    await GoogleAuth.signIn(); // 用户点击登录或首次登录
   }
-
-  await loadPlans();
-  await loadRank();
-});
+  const user = GoogleAuth.currentUser.get();
+  const token = user.getAuthResponse().access_token;
+  gapi.client.setToken({ access_token: token });
+}
 
 // -------------------- Plans --------------------
 async function loadPlans() {
+  await ensureSignedIn();
+
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `Plans!A2:F1000` // 指向 Plans sheet
+      range: `Plans!A2:F1000`
     });
 
     const rows = res.result.values || [];
@@ -55,6 +60,7 @@ async function loadPlans() {
 
 document.getElementById('plan-form').addEventListener('submit', async function(e) {
   e.preventDefault();
+  await ensureSignedIn();
 
   const date = document.getElementById('date').value;
   const restaurant = document.getElementById('restaurant').value;
@@ -97,21 +103,6 @@ document.getElementById('plan-form').addEventListener('submit', async function(e
   }
 });
 
-// -------------------- Pigeon Rank --------------------
-async function loadRank() {
-  try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range: `PigeonRank!A2:B1000`
-    });
-
-    const rows = res.result.values || [];
-    renderRank();
-  } catch (err) {
-    console.error("❌ 加载排名失败:", err.result?.error || err);
-  }
-}
-
 // -------------------- 渲染函数 --------------------
 function renderMemberTags(names) {
   return names.map(name => `
@@ -151,14 +142,16 @@ async function updateNote(index, value) {
 }
 
 async function deletePlan(index) {
+  await ensureSignedIn();
   try {
+    const sheetId = await getSheetId('Plans');
     await gapi.client.sheets.spreadsheets.batchUpdate({
       spreadsheetId: SHEET_ID,
       resource: {
         requests: [{
           deleteDimension: {
             range: {
-              sheetId: await getSheetId('Plans'),
+              sheetId: sheetId,
               dimension: 'ROWS',
               startIndex: index + 1,
               endIndex: index + 2
@@ -177,6 +170,7 @@ async function deletePlan(index) {
 }
 
 async function updatePlanRow(index) {
+  await ensureSignedIn();
   try {
     await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
@@ -204,6 +198,7 @@ async function getSheetId(sheetName) {
   return sheet ? sheet.properties.sheetId : null;
 }
 
+// -------------------- 排名 --------------------
 function renderRank() {
   const rank = {};
   members.forEach(name => rank[name] = 0);
@@ -229,3 +224,5 @@ function renderRank() {
     tbody.appendChild(row);
   });
 }
+
+
