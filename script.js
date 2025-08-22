@@ -1,4 +1,4 @@
-const API_KEY = 'AIzaSyBniXl_kpJlEqQXs4htzl_lEkLO5su5OqY';
+const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
 
 let plans = [];
@@ -10,11 +10,19 @@ const memberAvatars = {
   D: 'https://i.imgur.com/4.png'
 };
 
-gapi.load('client', async () => {
+// -------------------- 初始化 --------------------
+gapi.load('client:auth2', async () => {
   await gapi.client.init({
-    apiKey: API_KEY,
-    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
+    clientId: CLIENT_ID,
+    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+    scope: "https://www.googleapis.com/auth/spreadsheets"
   });
+
+  const GoogleAuth = gapi.auth2.getAuthInstance();
+  if (!GoogleAuth.isSignedIn.get()) {
+    await GoogleAuth.signIn(); // 弹出登录窗口
+  }
+
   await loadPlans();
   await loadRank();
 });
@@ -137,14 +145,13 @@ async function toggleDone(index) {
   renderRank();
 }
 
-function updateNote(index, value) {
+async function updateNote(index, value) {
   plans[index].note = value;
-  updatePlanRow(index); // 同步到 sheet
+  await updatePlanRow(index);
 }
 
 async function deletePlan(index) {
   try {
-    // 删除对应行（Google Sheets API 没有直接删除单元格，只能使用 batchUpdate）
     await gapi.client.sheets.spreadsheets.batchUpdate({
       spreadsheetId: SHEET_ID,
       resource: {
@@ -153,7 +160,7 @@ async function deletePlan(index) {
             range: {
               sheetId: await getSheetId('Plans'),
               dimension: 'ROWS',
-              startIndex: index + 1, // +1 因为 A2 对应 index 0
+              startIndex: index + 1,
               endIndex: index + 2
             }
           }
@@ -169,12 +176,11 @@ async function deletePlan(index) {
   }
 }
 
-// -------------------- 更新单行 --------------------
 async function updatePlanRow(index) {
   try {
     await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Plans!A${index + 2}:F${index + 2}`, // A2 对应 index 0
+      range: `Plans!A${index + 2}:F${index + 2}`,
       valueInputOption: 'USER_ENTERED',
       resource: {
         values: [[
@@ -192,16 +198,12 @@ async function updatePlanRow(index) {
   }
 }
 
-// -------------------- 获取 sheetId --------------------
 async function getSheetId(sheetName) {
-  const res = await gapi.client.sheets.spreadsheets.get({
-    spreadsheetId: SHEET_ID
-  });
+  const res = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
   const sheet = res.result.sheets.find(s => s.properties.title === sheetName);
   return sheet ? sheet.properties.sheetId : null;
 }
 
-// -------------------- 渲染排名 --------------------
 function renderRank() {
   const rank = {};
   members.forEach(name => rank[name] = 0);
