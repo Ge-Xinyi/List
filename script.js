@@ -86,6 +86,7 @@ document.getElementById('plan-form').addEventListener('submit', async function (
   const newPlanData = {
     date: document.getElementById('date').value,
     restaurant: document.getElementById('restaurant').value,
+    source: document.getElementById('source').value,
     note: document.getElementById('note').value,
     participants: participants,
     initiator: participants[0] || '',
@@ -101,7 +102,7 @@ document.getElementById('plan-form').addEventListener('submit', async function (
         values: [[
           newPlanData.date,
           newPlanData.restaurant,
-          newPlanData.initiator,
+          newPlanData.source,
           newPlanData.participants.join(','),
           newPlanData.done ? '是' : '否',
           newPlanData.note
@@ -289,5 +290,6 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
 
 
