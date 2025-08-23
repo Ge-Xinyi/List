@@ -13,10 +13,10 @@ let plans = [];
 let pigeonCounts = { devil: 0, penguin: 0, ice: 0, cloud: 0 };
 const members = ['devil', 'penguin', 'ice', 'cloud'];
 const memberAvatars = {
-  devil: 'https://tvax1.sinaimg.cn/crop.0.0.480.480.180/006Ge43Tly8i29ayii1x0j30dc0dcaac.jpg?KID=imgbed,tva&Expires=1755958868&ssig=YZb3AhzYQy',
-  penguin: 'https://tvax1.sinaimg.cn/crop.0.0.512.512.180/006qGyxOly8hxy9uscor2j30e80e8wf5.jpg?KID=imgbed,tva&Expires=1755958920&ssig=NxKAWVKxBg',
-  ice: 'https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/008s8WCZly8hvdi7u98z9j30u00u00vk.jpg?KID=imgbed,tva&Expires=1755958969&ssig=cwFozFR2eW',
-  cloud: 'https://tvax4.sinaimg.cn/crop.0.0.684.684.180/005GIbBOly8gczkcbv0q2j30j00j0jsn.jpg?KID=imgbed,tva&Expires=1755958943&ssig=5QH6eZZ1nX'
+  devil: 'https://tvax1.sinaimg.cn/crop.0.0.480.480.180/006Ge43Tly8i29ayii1x0j30dc0dcaac.jpg',
+  penguin: 'https://tvax1.sinaimg.cn/crop.0.0.512.512.180/006qGyxOly8hxy9uscor2j30e80e8wf5.jpg',
+  ice: 'https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/008s8WCZly8hvdi7u98z9j30u00u00vk.jpg',
+  cloud: 'https://tvax4.sinaimg.cn/crop.0.0.684.684.180/005GIbBOly8gczkcbv0q2j30j00j0jsn.jpg'
 };
 const emojiMap = {
   devil: '😈',
@@ -290,6 +290,7 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
 
 
 
