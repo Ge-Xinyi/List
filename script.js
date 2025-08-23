@@ -250,7 +250,7 @@ async function updatePlanRow(index) {
         values: [[
           plan.date,
           plan.restaurant,
-          plab.source,
+          plan.source,
           // plan.initiator,
           plan.participants.join(','),
           plan.done ? '是' : '否',
@@ -290,6 +290,7 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
 
 
 
