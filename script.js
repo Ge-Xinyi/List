@@ -13,10 +13,10 @@ let plans = [];
 let pigeonCounts = { devil: 0, penguin: 0, ice: 0, cloud: 0 };
 const members = ['devil', 'penguin', 'ice', 'cloud'];
 const memberAvatars = {
-  devil: 'https://tvax1.sinaimg.cn/crop.0.0.480.480.180/006Ge43Tly8i29ayii1x0j30dc0dcaac.jpg',
-  penguin: 'https://tvax1.sinaimg.cn/crop.0.0.512.512.180/006qGyxOly8hxy9uscor2j30e80e8wf5.jpg',
-  ice: 'https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/008s8WCZly8hvdi7u98z9j30u00u00vk.jpg',
-  cloud: 'https://tvax4.sinaimg.cn/crop.0.0.684.684.180/005GIbBOly8gczkcbv0q2j30j00j0jsn.jpg'
+  devil: 'https://raw.githubusercontent.com/Ge-Xinyi/List/9e09019c3da6ace22e74bdd887c68f4611b0e7c6/img/evil.jpg',
+  penguin: 'https://raw.githubusercontent.com/Ge-Xinyi/List/9e09019c3da6ace22e74bdd887c68f4611b0e7c6/img/penguin.jpg',
+  ice: 'https://raw.githubusercontent.com/Ge-Xinyi/List/9e09019c3da6ace22e74bdd887c68f4611b0e7c6/img/ice.jpg',
+  cloud: 'https://raw.githubusercontent.com/Ge-Xinyi/List/9e09019c3da6ace22e74bdd887c68f4611b0e7c6/img/cloud.jpg'
 };
 const emojiMap = {
   devil: '😈',
@@ -290,6 +290,7 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
 
 
 
