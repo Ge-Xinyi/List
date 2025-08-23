@@ -129,10 +129,11 @@ async function loadPlans() {
       rowIndex: index + 2,
       date: row[0] || '',
       restaurant: row[1] || '',
-      initiator: row[2] || '',
-      participants: row[3] ? row[3].split(',') : [],
-      done: row[4] === '是',
-      note: row[5] || ''
+      source: row[2] || '',
+      initiator: row[3] || '',
+      participants: row[4] ? row[4].split(',') : [],
+      done: row[5] === '是',
+      note: row[6] || ''
     }));
     renderPlans();
   } catch (err) {
@@ -247,6 +248,7 @@ async function updatePlanRow(index) {
         values: [[
           plan.date,
           plan.restaurant,
+          plab.source,
           plan.initiator,
           plan.participants.join(','),
           plan.done ? '是' : '否',
@@ -286,3 +288,4 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
