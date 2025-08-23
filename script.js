@@ -130,10 +130,10 @@ async function loadPlans() {
       date: row[0] || '',
       restaurant: row[1] || '',
       source: row[2] || '',
-      initiator: row[3] || '',
-      participants: row[4] ? row[4].split(',') : [],
-      done: row[5] === '是',
-      note: row[6] || ''
+      // initiator: row[3] || '',
+      participants: row[3] ? row[3].split(',') : [],
+      done: row[4] === '是',
+      note: row[5] || ''
     }));
     renderPlans();
   } catch (err) {
@@ -172,6 +172,7 @@ function renderPlans() {
     row.innerHTML = `
       <td>${plan.date}</td>
       <td>${plan.restaurant}</td>
+      <td>${plan.source}</td>
       <td>${renderMemberTags(plan.participants)}</td>
       <td><input type="checkbox" ${plan.done ? 'checked' : ''} onchange="toggleDone(${index})"></td>
       <td><input type="text" value="${plan.note}" onchange="updateNote(${index}, this.value)"></td>
@@ -249,7 +250,7 @@ async function updatePlanRow(index) {
           plan.date,
           plan.restaurant,
           plab.source,
-          plan.initiator,
+          // plan.initiator,
           plan.participants.join(','),
           plan.done ? '是' : '否',
           plan.note
@@ -288,4 +289,5 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
 
