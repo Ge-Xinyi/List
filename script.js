@@ -8,13 +8,19 @@ const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 // --- GLOBAL VARIABLES ---
 let tokenClient;
 let plans = [];
-let pigeonCounts = { 😈: 0, 🐧: 0, 🧊: 0, 💭: 0 };
-const members = ['😈', '🐧', '🧊', '💭'];
+let pigeonCounts = { devil: 0, penguin: 0, ice: 0, cloud: 0 };
+const members = ['devil', 'penguin', 'ice', 'cloud'];
 const memberAvatars = {
-  😈: 'https://i.imgur.com/1.png',
-  🐧: 'https://i.imgur.com/2.png',
-  🧊: 'https://i.imgur.com/3.png',
-  💭: 'https://i.imgur.com/4.png'
+  devil: 'https://i.imgur.com/1.png',
+  penguin: 'https://i.imgur.com/2.png',
+  ice: 'https://i.imgur.com/3.png',
+  cloud: 'https://i.imgur.com/4.png'
+};
+const emojiMap = {
+  devil: '😈',
+  penguin: '🐧',
+  ice: '🧊',
+  cloud: '💭'
 };
 
 // --- DOM ELEMENTS ---
@@ -58,12 +64,13 @@ loginBtn.onclick = () => tokenClient.requestAccessToken();
 // --- FORM SUBMIT ---
 document.getElementById('plan-form').addEventListener('submit', async function (e) {
   e.preventDefault();
+  const participants = Array.from(document.querySelectorAll('input[name="members"]:checked')).map(el => el.value);
   const newPlanData = {
     date: document.getElementById('date').value,
     restaurant: document.getElementById('restaurant').value,
     note: document.getElementById('note').value,
-    participants: Array.from(document.querySelectorAll('input[name="members"]:checked')).map(el => el.value),
-    initiator: (Array.from(document.querySelectorAll('input[name="members"]:checked')).map(el => el.value))[0] || '',
+    participants: participants,
+    initiator: participants[0] || '',
     done: false
   };
 
@@ -196,7 +203,7 @@ async function incrementPigeon(name) {
 function renderMemberTags(names) {
   return names.map(name => `
     <span class="member-tag">
-      <img src="${memberAvatars[name]}" alt="${name}">${name}
+      <img src="${memberAvatars[name]}" alt="${emojiMap[name]}">${emojiMap[name]}
     </span>
   `).join('');
 }
@@ -261,4 +268,3 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
-
