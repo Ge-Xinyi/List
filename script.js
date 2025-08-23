@@ -2,11 +2,13 @@
 const CLIENT_ID = '53198014929-ukavfd14a6p17a43c8n9en6qdb4tdpha.apps.googleusercontent.com';
 const SHEET_ID = '1TPt4IN3zAstf1v04gKnNA_YueyTwEpsHtmWfgvFU9Gk';
 const SHEET_NAME = 'Plans';
-const PIGEON_SHEET = 'PigeonRank'; // 新增专门存放放鸽子数据的Sheet
+const PIGEON_SHEET = 'PigeonRank';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 // --- GLOBAL VARIABLES ---
 let tokenClient;
+let gapiInited = false;
+let gisInited = false;
 let plans = [];
 let pigeonCounts = { devil: 0, penguin: 0, ice: 0, cloud: 0 };
 const members = ['devil', 'penguin', 'ice', 'cloud'];
@@ -25,41 +27,57 @@ const emojiMap = {
 
 // --- DOM ELEMENTS ---
 const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
 
 // --- INITIALIZATION ---
 window.onload = () => {
-  gapi.load('client', initializeGapiClient);
-  google.accounts.id.initialize({
-    client_id: CLIENT_ID,
-    callback: () => {}
+  gapi.load('client', async () => {
+    await gapi.client.init({
+      discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+    });
+    gapiInited = true;
+    maybeEnableLogin();
   });
-};
 
-async function initializeGapiClient() {
-  await gapi.client.init({
-    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-  });
-  initializeTokenClient();
-}
-
-function initializeTokenClient() {
+  // 初始化 OAuth2 Token Client
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: SCOPES,
     callback: async (tokenResponse) => {
       if (tokenResponse.error) {
         console.error("Authentication error:", tokenResponse.error);
-        alert("Login failed. Please check the console for details.");
+        alert("Login failed. Please check console for details.");
         return;
       }
       console.log("✅ Login successful!");
+      loginBtn.style.display = "none";
+      logoutBtn.style.display = "inline-block";
       await loadPlans();
       await loadPigeonCounts();
     },
   });
+  gisInited = true;
+  maybeEnableLogin();
+};
+
+function maybeEnableLogin() {
+  if (gapiInited && gisInited) {
+    loginBtn.innerHTML = `<button>Login with Google</button>`;
+  }
 }
 
-loginBtn.onclick = () => tokenClient.requestAccessToken();
+// --- LOGIN & LOGOUT ---
+loginBtn.onclick = () => {
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+};
+
+logoutBtn.onclick = () => {
+  google.accounts.oauth2.revoke(localStorage.getItem("gapi_token"), () => {
+    console.log("🔒 Logged out");
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  });
+};
 
 // --- FORM SUBMIT ---
 document.getElementById('plan-form').addEventListener('submit', async function (e) {
