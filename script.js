@@ -8,13 +8,13 @@ const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 // --- GLOBAL VARIABLES ---
 let tokenClient;
 let plans = [];
-let pigeonCounts = { A: 0, B: 0, C: 0, D: 0 };
+let pigeonCounts = { 😈: 0, 🐧: 0, 🧊: 0, 💭: 0 };
 const members = ['😈', '🐧', '🧊', '💭'];
 const memberAvatars = {
-  A: 'https://i.imgur.com/1.png',
-  B: 'https://i.imgur.com/2.png',
-  C: 'https://i.imgur.com/3.png',
-  D: 'https://i.imgur.com/4.png'
+  😈: 'https://i.imgur.com/1.png',
+  🐧: 'https://i.imgur.com/2.png',
+  🧊: 'https://i.imgur.com/3.png',
+  💭: 'https://i.imgur.com/4.png'
 };
 
 // --- DOM ELEMENTS ---
@@ -261,3 +261,4 @@ async function deletePlan(index) {
     console.error("❌ Failed to delete plan:", err);
   }
 }
+
